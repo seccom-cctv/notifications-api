@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-items = {"foo": "The Foo Wrestlers"}
+users = {"User1": ["email"], "User2": ["phone", "email"]}
 
 
 @app.get("/")
@@ -12,12 +12,21 @@ async def read_root():
 
     return {"Hello": "World"}
 
+@app.post("/send")
+async def send_notifications(users_ids=[]):
+    print(users_ids)
+    print("AAA")
+    for user_id in users_ids:
+        # Get User preference from db
+        
+        for preference in users[user_id]:
+            if preference == "email":
+                print("despatch email notification")
+            elif preference == "phone":
+                print("despatch SMS notification")
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: Union[str, None] = None):
-    '''Document endpoint usage here'''
 
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
 
-    return {"item_id": item_id, "q": q}
+
+
+    return users_ids
