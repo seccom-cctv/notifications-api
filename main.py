@@ -1,11 +1,33 @@
-import sre_compile
-from typing import Union, List
-from fastapi import FastAPI, HTTPException
-from schema import UserList, ItemList
+from typing import Union
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from sqlalchemy.orm import Session
+from schemas import UserBase, UserCreate
+import crud, models
+from database import SessionLocal, engine
 
+
+from models import *
+
+models.Base.metadata.create_all(bind=engine) # create the database tables
 app = FastAPI()
 
-users = {"User1": ["email"], "User2": ["phone", "email"]}
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    response = Response("Internal server error", status_code=500)
+    try:
+        request.state.db = SessionLocal()
+        response = await call_next(request)
+    finally:
+        request.state.db.close()
+    return response
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.get("/")
@@ -15,17 +37,28 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.post("/send")
-async def send_notifications(users_ids: list[str]):
+async def send_notifications(users_ids: list[int], db: Session = Depends(get_db)):
     print(users_ids)
+    response = {"msg": []}
     for user_id in users_ids:
         # Get User preference from db
-        preferences = users[user_id]
 
+        user = crud.get_user(db, user_id=user_id)
 
-        for preference in preferences:
+        if user:
+            print(user)
+            preference = user.contact_preference
+            print(preference)
+
             if preference == "email":
-                print("dispatch email notification")
+                response["msg"].append("dispatch email notification")
             elif preference == "phone":
-                print("dispatch SMS notification")
+                response["msg"].append("dispatch SMS notification")
+        else:
+            response["msg"].append(f"User {user_id} not found")
 
-    return users_ids
+    return response
+
+@app.post("/users/", response_model=UserBase)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    return crud.create_user(db=db, user=user)
