@@ -1,5 +1,7 @@
-from typing import Union
+import sre_compile
+from typing import Union, List
 from fastapi import FastAPI, HTTPException
+from schema import UserList, ItemList
 
 app = FastAPI()
 
@@ -13,20 +15,17 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.post("/send")
-async def send_notifications(users_ids=[]):
+async def send_notifications(users_ids: list[str]):
     print(users_ids)
-    print("AAA")
     for user_id in users_ids:
         # Get User preference from db
-        
-        for preference in users[user_id]:
+        preferences = users[user_id]
+
+
+        for preference in preferences:
             if preference == "email":
-                print("despatch email notification")
+                print("dispatch email notification")
             elif preference == "phone":
-                print("despatch SMS notification")
-
-
-
-
+                print("dispatch SMS notification")
 
     return users_ids
