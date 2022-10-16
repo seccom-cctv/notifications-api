@@ -7,6 +7,9 @@ class UserBase(BaseModel):
     email: str
     phone_number: int
 
+    class Config:
+        orm_mode = True
+
 
 class UserCreate(UserBase):
     pass

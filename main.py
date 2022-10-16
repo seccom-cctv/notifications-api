@@ -52,6 +52,9 @@ async def send_notifications(users_ids: list[int], db: Session = Depends(get_db)
 
             if preference == "email":
                 response["msg"].append("dispatch email notification")
+                send_email("sinid.lei@gmail.com", "kzwnxvsbvvrhtibm", user.email, "Alert Detected", "ALERT")
+
+
             elif preference == "phone":
                 response["msg"].append("dispatch SMS notification")
         else:
@@ -62,3 +65,39 @@ async def send_notifications(users_ids: list[int], db: Session = Depends(get_db)
 @app.post("/users/", response_model=UserBase)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
+
+@app.get("/users/", response_model=list[UserBase])
+async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    print(users)
+    response = {"users": []}
+    for user in users:
+        print(user)
+        response["users"].append(user)
+
+    return users
+
+
+
+def send_email(user, pwd, recipient, subject, body):
+    import smtplib
+
+    FROM = user
+    TO = recipient if isinstance(recipient, list) else [recipient]
+    SUBJECT = subject
+    TEXT = body
+
+    # Prepare actual message
+    message = f"From: {FROM}\nTo: {TO}\nSubject: {SUBJECT}\n\n{TEXT}"
+
+    print(message)
+    
+    server = smtplib.SMTP("smtp.gmail.com",587)
+    server.ehlo()
+    server.starttls()
+    server.login(user, pwd)
+    server.sendmail(FROM, TO, message)
+    server.close()
+    print('successfully sent the mail')
+
+    

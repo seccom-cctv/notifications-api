@@ -9,6 +9,10 @@ def get_user(db: Session, user_id: int):
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    print(db.query(models.User).offset(skip).limit(limit).all())
+    return db.query(models.User).offset(skip).limit(limit).all()
+
 
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(email=user.email, phone_number=user.phone_number, contact_preference=user.contact_preference)
