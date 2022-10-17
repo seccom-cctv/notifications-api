@@ -8,6 +8,7 @@ jobs:
       - run:
           name: Run Pytest Tests
           command: |
+            pip install --upgrade pip
             pip install -r requirements.txt
             pytest
             
