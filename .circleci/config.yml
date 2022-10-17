@@ -1,22 +1,17 @@
 version: 2.1
 
-orbs:
-  python: circleci/python@2.0.3
 jobs:
-  build-and-test:
-    docker:
-      - image: cimg/python:3.10.4
+  test:
+    machine: true
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
       - run:
-          name: Run tests
+          name: Run Pytest Tests
           command: |
             pip install -r requirements.txt
             pytest
             
 workflows:
-  test:
+  build-and-test:
     jobs:
       - test
