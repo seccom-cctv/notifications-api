@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   python: circleci/python@2.0.3
+  aws-ecr: circleci/aws-ecr@8.1.3
 jobs:
   build-and-test:
     docker:
@@ -15,8 +16,16 @@ jobs:
           command: |
           pip install -r requirements.txt
           pytest
+  build-and-deploy:
+    - aws-ecr/build-and-push-image:
+      - repo: 
             
 workflows:
   build-and-test:
     jobs:
       - test
+      - aws-ecr/build_and_push_image:
+          region: us-east-1
+          account-url: ${AWS_ECR_ACCOUNT_URL}
+          repo: ${CIRCLE_PROJECT_REPONAME}
+          tag: ${CIRCLE_BUILD_NUM}
