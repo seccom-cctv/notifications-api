@@ -16,9 +16,6 @@ jobs:
           command: |
           pip install -r requirements.txt
           pytest
-  build-and-deploy:
-    - aws-ecr/build-and-push-image:
-      - repo: 
             
 workflows:
   build-and-test:
