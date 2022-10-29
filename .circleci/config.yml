@@ -2,6 +2,8 @@ version: 2.1
 
 orbs:
   aws-ecr: circleci/aws-ecr@0.0.4
+  aws-ecs: circleci/aws-ecs@3.2.0
+  aws-cli: circleci/aws-cli@3.1.1
 
 jobs:
   test:
@@ -14,9 +16,30 @@ jobs:
             pip install --upgrade pip
             pip3 install -r requirements.txt
             pytest
+  verify-deployment:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/install
+      - aws-cli/setup:
+          aws-access-key-id: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION
+          aws-secret-access-key: AWS_DEFAULT_REGION
+      - run:
+          name: Get last task definition
+          command: >
+            TASK_DEFINITION_ARN=$(aws ecs describe-task-definition \
+                --task-definition ${CIRCLE_PROJECT_REPONAME}-service \
+                --output text \
+                --query 'taskDefinition.taskDefinitionArn')
+            echo "export TASK_DEFINITION_ARN='${TASK_DEFINITION_ARN}'" >>
+            "$BASH_ENV"
+      - aws-ecs/verify-revision-is-deployed:
+          family: '${CIRCLE_PROJECT_REPONAME}-service'
+          cluster: '${CIRCLE_PROJECT_REPONAME}-cluster'
+          task-definition-arn: '${TASK_DEFINITION_ARN}'
             
 workflows:
-  build-and-test:
+  test-build-deploy:
     jobs:
       - test
       - aws-ecr/build_and_push_image:
@@ -24,3 +47,14 @@ workflows:
           account-url: ${AWS_ECR_ACCOUNT_URL}
           repo: ${CIRCLE_PROJECT_REPONAME}
           tag: ${CIRCLE_BUILD_NUM}
+          requires:
+            - test
+      - aws-ecs/deploy-service-update:
+        requires:
+          - aws-ecr/build-and-push-image
+        family: '${CIRCLE_PROJECT_REPONAME}-service'
+        cluster: '${CIRCLE_PROJECT_REPONAME}-cluster'
+        container-image-name-updates: 'container=${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}'
+      # - verify-deployment:
+      #     requires:
+      #       - aws-ecs/deploy-service-update
