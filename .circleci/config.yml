@@ -1,5 +1,10 @@
 version: 2.1
 
+orbs:
+  aws-ecr: circleci/aws-ecr@0.0.4
+  aws-ecs: circleci/aws-ecs@0.0.10
+  #aws-cli: circleci/aws-cli@3.1.1
+
 jobs:
   test:
     machine: true
@@ -13,6 +18,27 @@ jobs:
             pytest
             
 workflows:
-  build-and-test:
+  test-build-deploy:
     jobs:
       - test
+      - aws-ecr/build_and_push_image:
+          region: ${AWS_REGION}
+          account-url: ${AWS_ECR_ACCOUNT_URL}
+          repo: ${CIRCLE_PROJECT_REPONAME}
+          tag: ${CIRCLE_BUILD_NUM}
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - main
+                - develop
+      # - aws-ecs/deploy-service-update:
+      #     requires:
+      #       - aws-ecr/build_and_push_image
+      #     family: '${CIRCLE_PROJECT_REPONAME}-service'
+      #     cluster: '${CIRCLE_PROJECT_REPONAME}-cluster'
+      #     container-image-name-updates: 'container=${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}'
+      # - verify-deployment:
+      #     requires:
+      #       - aws-ecs/deploy-service-update
