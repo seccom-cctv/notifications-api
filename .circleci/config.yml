@@ -29,7 +29,7 @@ workflows:
           requires:
             - test
           filters:
-            brances:
+            branches:
               only:
                 - main
                 - develop
