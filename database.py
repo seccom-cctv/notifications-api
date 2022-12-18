@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@mysql-db/seccom-cctv-notifications"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://admin:password@notifications-api-db.cs10xruwdvyw.us-east-1.rds.amazonaws.com:3306/notifications_api_db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
