@@ -7,6 +7,7 @@ from database import SessionLocal, engine
 import requests
 import os
 from dotenv import load_dotenv
+import logging
 
 
 from models import *
@@ -63,12 +64,19 @@ async def send_notifications(camera_id: int):
 
     #user = crud.get_user(db, user_id=user_id)
 
+    
+
     for user in data:
+        b = True
+        print(user["Attributes"])
+        logging.info(user["Attributes"])
         for attribute in user["Attributes"]:
             if attribute["Name"]=="email":
                 response["msg"].append("dispatch email notification")
                 send_email("sinid.lei@gmail.com", "kzwnxvsbvvrhtibm", attribute["Value"], "ALERT DETECTED", "Alert detected in your company.")
-        response["msg"].append(f"User not found")
+                b=False
+        if b:
+            response["msg"].append(f"User not found")
 
     return response
 
