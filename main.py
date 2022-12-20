@@ -68,8 +68,8 @@ async def send_notifications(camera_id: int):
 
     for user in data:
         b = True
-        print(user["Attributes"])
-        logging.info(user["Attributes"])
+        print(user)
+        logging.info(user)
         for attribute in user["Attributes"]:
             if attribute["Name"]=="email":
                 response["msg"].append("dispatch email notification")
