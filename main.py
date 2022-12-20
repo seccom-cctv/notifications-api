@@ -64,7 +64,8 @@ async def send_notifications(camera_id: int):
 
     #user = crud.get_user(db, user_id=user_id)
 
-    
+    print(data)
+    logging.info(data)
 
     for user in data:
         b = True
