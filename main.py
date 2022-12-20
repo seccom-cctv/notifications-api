@@ -1,15 +1,22 @@
 from typing import Union
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from sqlalchemy.orm import Session
-from schemas import UserBase, UserCreate
-import crud, models
+#from schemas import UserBase, UserCreate
+#import crud, models
 from database import SessionLocal, engine
+import requests
+import os
+from dotenv import load_dotenv
 
 
 from models import *
 
-models.Base.metadata.create_all(bind=engine) # create the database tables
+#models.Base.metadata.create_all(bind=engine) # create the database tables
 app = FastAPI()
+
+# api_url = os.getenv("API_URL")
+#API_URL = "http://localhost:8082/v1/internal/device_managers"
+API_URL = os.getenv("SITES_API_URL")
 
 @app.middleware("http")
 async def db_session_middleware(request: Request, call_next):
@@ -22,12 +29,12 @@ async def db_session_middleware(request: Request, call_next):
     return response
 
 # Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
 
 @app.get("/")
@@ -37,45 +44,48 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.post("/send")
-async def send_notifications(users_ids: list[int], db: Session = Depends(get_db)):
-    print(users_ids)
+async def send_notifications(camera_id: int):
+    global API_URL
+
     response = {"msg": []}
-    for user_id in users_ids:
+    #for user_id in camera_id:
         # Get User preference from db
 
-        user = crud.get_user(db, user_id=user_id)
+    url = f'{API_URL}/{camera_id}'
 
-        if user:
-            print(user)
-            preference = user.contact_preference
-            print(preference)
+    r = requests.get(url = url)
+  
+    # extracting data in json format
+    data = r.json()
+    # print(data)
 
-            if preference == "email":
+    # users = data.users  
+
+    #user = crud.get_user(db, user_id=user_id)
+
+    for user in data:
+        for attribute in user["Attributes"]:
+            if attribute["Name"]=="email":
                 response["msg"].append("dispatch email notification")
-                send_email("sinid.lei@gmail.com", "kzwnxvsbvvrhtibm", user.email, "Alert Detected", "ALERT")
-
-
-            elif preference == "phone":
-                response["msg"].append("dispatch SMS notification")
-        else:
-            response["msg"].append(f"User {user_id} not found")
+                send_email("sinid.lei@gmail.com", "kzwnxvsbvvrhtibm", attribute["Value"], "ALERT DETECTED", "Alert detected in your company.")
+        response["msg"].append(f"User not found")
 
     return response
 
-@app.post("/users/", response_model=UserBase)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    return crud.create_user(db=db, user=user)
+# @app.post("/users/", response_model=UserBase)
+# def create_user(user: UserCreate, db: Session = Depends(get_db)):
+#     return crud.create_user(db=db, user=user)
 
-@app.get("/users/", response_model=list[UserBase])
-async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
-    print(users)
-    response = {"users": []}
-    for user in users:
-        print(user)
-        response["users"].append(user)
+# @app.get("/users/", response_model=list[UserBase])
+# async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     users = crud.get_users(db, skip=skip, limit=limit)
+#     print(users)
+#     response = {"users": []}
+#     for user in users:
+#         print(user)
+#         response["users"].append(user)
 
-    return users
+#     return users
 
 
 

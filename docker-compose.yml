@@ -12,7 +12,7 @@ services:
         MYSQL_USER: user
         MYSQL_PASSWORD: password
     ports:
-        - "9906:3306"
+        - "9907:3306"
     volumes:
       - seccom-cctv-notifications-mysql-volume:/var/lib/mysql
       
