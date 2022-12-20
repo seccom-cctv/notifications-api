@@ -17,6 +17,8 @@ app = FastAPI()
 
 # api_url = os.getenv("API_URL")
 #API_URL = "http://localhost:8082/v1/internal/device_managers"
+load_dotenv()
+
 API_URL = os.getenv("SITES_API_URL")
 
 @app.middleware("http")
